@@ -29,7 +29,7 @@
         "type": "function",
         "z": "d039c09468129985",
         "name": "parse_modbus_message",
-        "func": "// Input data (replace with msg.payload or modify accordingly)\nconst inputArray = msg.payload; // Assume payload is the array you provided.\n\n// Initialize parsing index\nlet index = 0;\n\n// Helper function to convert two 16-bit registers into a float\nfunction parseFloat16(high, low) {\n    const intBits = (high << 16) | low;\n    return new Float32Array(new Uint32Array([intBits]).buffer)[0];\n}\n\n// Parse NamePlate information\nconst parsedData = {};\nparsedData.model = inputArray[index++];\nparsedData.id = inputArray[index++];\nparsedData.slaveAddress = inputArray[index++];\nparsedData.lineNo = inputArray[index++];\nparsedData.phase = inputArray[index++];\n\n// Parse meterName (9 characters packed as 16-bit registers)\nlet meterName = '';\nfor (let i = 0; i < 9 && index < inputArray.length; i += 2) {\n    const char1 = String.fromCharCode(inputArray[index] >> 8);\n    const char2 = String.fromCharCode(inputArray[index] & 0xFF);\n    meterName += char1 + (char2 !== '\\u0000' ? char2 : '');\n    index++;\n}\nparsedData.meterName = meterName.trim();\n\n// Parse Voltage, Current, Power, Energy, Frequency, Power Factor, Alarm Status\nparsedData.voltage = parseFloat16(inputArray[index++], inputArray[index++]);\nparsedData.current = parseFloat16(inputArray[index++], inputArray[index++]);\nparsedData.power = parseFloat16(inputArray[index++], inputArray[index++]);\nparsedData.energy = parseFloat16(inputArray[index++], inputArray[index++]);\nparsedData.frequency = parseFloat16(inputArray[index++], inputArray[index++]);\nparsedData.powerFactor = parseFloat16(inputArray[index++], inputArray[index++]);\nparsedData.alarmStatus = parseFloat16(inputArray[index++], inputArray[index++]);\n\n// Parse additional fields (poll_us, lastUpdate_us, dataAge_ms, dataStale, deviceState)\nparsedData.poll_us = (inputArray[index++] << 16) | inputArray[index++];\nparsedData.lastUpdate_us = (inputArray[index++] << 16) | inputArray[index++];\nparsedData.dataAge_ms = (inputArray[index++] << 16) | inputArray[index++];\nparsedData.dataStale = inputArray[index++] === 1;\nparsedData.deviceState = inputArray[index++];\n\n// Output parsed data\nmsg.payload = parsedData;\nreturn msg;\n",
+        "func": "// Input data (replace with msg.payload or modify accordingly)\nconst inputArray = msg.payload; // Assume payload is the array you provided.\n\n// Initialize parsing index\nlet index = 0;\n\n// Helper function to convert two 16-bit registers into a float\nfunction parseFloat16(high, low) {\n    const intBits = (high << 16) | low;\n    return new Float32Array(new Uint32Array([intBits]).buffer)[0];\n}\n\n// Helper function to parse 64-bit integers from four 16-bit registers\nfunction parseInt64(highHigh, highLow, lowHigh, lowLow) {\n    const high = (highHigh << 16) | highLow;\n    const low = (lowHigh << 16) | lowLow;\n    return (BigInt(high) << 32n) | BigInt(low);  // Convert to BigInt to handle 64-bit values\n}\n\n// Parse NamePlate information\nconst parsedData = {};\nparsedData.model = inputArray[index++];\nparsedData.id = inputArray[index++];\nparsedData.slaveAddress = inputArray[index++];\nparsedData.lineNo = inputArray[index++];\nparsedData.phase = inputArray[index++];\n\n// Parse meterName (9 characters packed as 16-bit registers)\nlet meterName = '';\nfor (let i = 0; i < 9 && index < inputArray.length; i += 2) {\n    const char1 = String.fromCharCode(inputArray[index] >> 8);\n    const char2 = String.fromCharCode(inputArray[index] & 0xFF);\n    meterName += char1 + (char2 !== '\\u0000' ? char2 : '');\n    index++;\n}\nparsedData.meterName = meterName.trim();\n\n// Parse Voltage, Current, Power, Energy, Frequency, Power Factor, Alarm Status\nparsedData.voltage = parseFloat16(inputArray[index++], inputArray[index++]);\nparsedData.current = parseFloat16(inputArray[index++], inputArray[index++]);\nparsedData.power = parseFloat16(inputArray[index++], inputArray[index++]);\nparsedData.energy = parseFloat16(inputArray[index++], inputArray[index++]);\nparsedData.frequency = parseFloat16(inputArray[index++], inputArray[index++]);\nparsedData.powerFactor = parseFloat16(inputArray[index++], inputArray[index++]);\nparsedData.alarmStatus = parseFloat16(inputArray[index++], inputArray[index++]);\n\n// Parse additional fields (poll_us, lastUpdate_us, dataAge_ms, dataStale, deviceState)\n// Each 64-bit field is now represented by 4 16-bit registers\nparsedData.poll_us = parseInt64(inputArray[index++], inputArray[index++], inputArray[index++], inputArray[index++]);\nparsedData.lastUpdate_us = parseInt64(inputArray[index++], inputArray[index++], inputArray[index++], inputArray[index++]);\nparsedData.dataAge_ms = parseInt64(inputArray[index++], inputArray[index++], inputArray[index++], inputArray[index++]);\n\n// Parse other fields (dataStale, deviceState)\nparsedData.dataStale = inputArray[index++] === 1;\nparsedData.deviceState = inputArray[index++];\n\n// Output parsed data\nmsg.payload = parsedData;\nreturn msg;\n",
         "outputs": 1,
         "timeout": 0,
         "noerr": 0,
@@ -49,7 +49,7 @@
         "type": "function",
         "z": "d039c09468129985",
         "name": "read power",
-        "func": "var id =1;\nvar fc = 3;\nvar sa = 0;\nvar addresses = 38;\nvar slave_ip = msg.payload.slave_ip;\nmsg.slave_ip = \"192.168.0.160\";\nmsg.payload = { value: msg.payload, 'fc': fc, 'unitid': id, 'address': sa, 'quantity': addresses };\nreturn msg;",
+        "func": "var id =1;\nvar fc = 3;\nvar sa = 0;\nvar addresses = 40;\nvar slave_ip = msg.payload.slave_ip;\nmsg.slave_ip = \"192.168.0.160\";\nmsg.payload = { value: msg.payload, 'fc': fc, 'unitid': id, 'address': sa, 'quantity': addresses };\nreturn msg;",
         "outputs": 1,
         "timeout": 0,
         "noerr": 0,
@@ -132,8 +132,7 @@
         "y": 80,
         "wires": [
             [
-                "f907236010e5b55f",
-                "8d93b248a9abfb2d"
+                "f907236010e5b55f"
             ],
             [
                 "f4984438146c3bfc"
@@ -168,22 +167,6 @@
         "registerShowMax": "38",
         "x": 830,
         "y": 120,
-        "wires": []
-    },
-    {
-        "id": "8d93b248a9abfb2d",
-        "type": "debug",
-        "z": "d039c09468129985",
-        "name": "debug 1",
-        "active": true,
-        "tosidebar": true,
-        "console": false,
-        "tostatus": false,
-        "complete": "false",
-        "statusVal": "",
-        "statusType": "auto",
-        "x": 240,
-        "y": 240,
         "wires": []
     },
     {
