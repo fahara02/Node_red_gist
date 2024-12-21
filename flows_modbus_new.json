@@ -1,0 +1,642 @@
+[
+    {
+        "id": "d039c09468129985",
+        "type": "tab",
+        "label": "Flow 1",
+        "disabled": false,
+        "info": "",
+        "env": []
+    },
+    {
+        "id": "f907236010e5b55f",
+        "type": "function",
+        "z": "d039c09468129985",
+        "name": "parse_modbus_message",
+        "func": "// Input data (replace with msg.payload or modify accordingly)\nconst inputArray = msg.payload; // Assume payload is the array you provided.\n\n// Initialize parsing index\nlet index = 0;\n\n// Helper function to convert two 16-bit registers into a float\nfunction parseFloat16(high, low) {\n    const intBits = (high << 16) | low;\n    return new Float32Array(new Uint32Array([intBits]).buffer)[0];\n}\n\n// Helper function to parse 64-bit integers from four 16-bit registers\nfunction parseInt64(highHigh, highLow, lowHigh, lowLow) {\n    const high = (highHigh << 16) | highLow;\n    const low = (lowHigh << 16) | lowLow;\n    return (BigInt(high) << 32n) | BigInt(low);  // Convert to BigInt to handle 64-bit values\n}\n\n// Parse NamePlate information\nconst parsedData = {};\n\nparsedData.id = inputArray[index++];\nparsedData.type = inputArray[index++];\n\n\n// Parse Voltage, Current, Power, Energy, Frequency, Power Factor, Alarm Status\nparsedData.voltage = parseFloat16(inputArray[index++], inputArray[index++]);\nparsedData.current = parseFloat16(inputArray[index++], inputArray[index++]);\nparsedData.power = parseFloat16(inputArray[index++], inputArray[index++]);\nparsedData.energy = parseFloat16(inputArray[index++], inputArray[index++]);\nparsedData.frequency = parseFloat16(inputArray[index++], inputArray[index++]);\nparsedData.powerFactor = parseFloat16(inputArray[index++], inputArray[index++]);\nparsedData.isValid=Boolean(inputArray[index++]);\nparsedData.voltage_cf=inputArray[index++];\nparsedData.current_cf=inputArray[index++];\nparsedData.power_cf=inputArray[index++];\nparsedData.energy_cf=inputArray[index++];\nparsedData.pf_cf=inputArray[index++];\nparsedData.frq_cf=inputArray[index++];\n\n\n\n// Output parsed data\nmsg.payload = parsedData;\nreturn msg;\n",
+        "outputs": 1,
+        "timeout": 0,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 590,
+        "y": 160,
+        "wires": [
+            [
+                "84b6e4d59d9a782b"
+            ]
+        ]
+    },
+    {
+        "id": "b5a0086cad28a2c6",
+        "type": "function",
+        "z": "d039c09468129985",
+        "name": "read power",
+        "func": "var id =1;\nvar fc = 3;\nvar sa = 0;\nvar addresses = 21;\nvar slave_ip = msg.payload.slave_ip;\nmsg.slave_ip = \"192.168.0.172\";\nmsg.payload = { value: msg.payload, 'fc': fc, 'unitid': id, 'address': sa, 'quantity': addresses };\nreturn msg;",
+        "outputs": 1,
+        "timeout": 0,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 350,
+        "y": 60,
+        "wires": [
+            [
+                "633d64463bcb0fb3"
+            ]
+        ]
+    },
+    {
+        "id": "cc4eb08b8b4d2239",
+        "type": "inject",
+        "z": "d039c09468129985",
+        "name": "UPS_IN ON",
+        "props": [
+            {
+                "p": "payload"
+            },
+            {
+                "p": "topic",
+                "vt": "str"
+            }
+        ],
+        "repeat": "",
+        "crontab": "",
+        "once": true,
+        "onceDelay": 0.1,
+        "topic": "",
+        "payload": "1",
+        "payloadType": "num",
+        "x": 130,
+        "y": 300,
+        "wires": [
+            [
+                "aa7dac339b6759ae"
+            ]
+        ]
+    },
+    {
+        "id": "1d0d511073c95641",
+        "type": "function",
+        "z": "d039c09468129985",
+        "name": "convert_to_JSON",
+        "func": "// Input: msg.payload should contain the parsed object from the previous step\n\n// Helper function to convert an object to JSON\nfunction convertToJson(parsedObject) {\n    try {\n        // Convert the object to a JSON string\n        return JSON.stringify(parsedObject, null, 2); // Pretty print with 2 spaces\n    } catch (error) {\n        // If there's an error, return an error object instead\n        return JSON.stringify({\n            error: \"Failed to convert object to JSON\",\n            details: error.message\n        });\n    }\n}\n\n// Assuming msg.payload contains the parsed object\nconst parsedObject = msg.payload;\n\n// Convert the parsed object to JSON\nmsg.payload = convertToJson(parsedObject);\n\n// Return the JSON string in msg.payload\nreturn msg;\n\n",
+        "outputs": 1,
+        "timeout": 0,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 530,
+        "y": 280,
+        "wires": [
+            []
+        ]
+    },
+    {
+        "id": "633d64463bcb0fb3",
+        "type": "modbus-flex-getter",
+        "z": "d039c09468129985",
+        "name": "",
+        "showStatusActivities": true,
+        "showErrors": true,
+        "showWarnings": true,
+        "logIOActivities": false,
+        "server": "2d5f4034f88a8017",
+        "useIOFile": false,
+        "ioFile": "",
+        "useIOForPayload": false,
+        "emptyMsgOnFail": true,
+        "keepMsgProperties": true,
+        "delayOnStart": false,
+        "startDelayTime": "",
+        "x": 550,
+        "y": 60,
+        "wires": [
+            [
+                "f907236010e5b55f"
+            ],
+            [
+                "f4984438146c3bfc"
+            ]
+        ]
+    },
+    {
+        "id": "dd03fcec8e870fe5",
+        "type": "function",
+        "z": "d039c09468129985",
+        "name": "read power",
+        "func": "var id =2;\nvar fc = 3;\nvar sa = 0;\nvar addresses = 21;\nvar slave_ip = msg.payload.slave_ip;\nmsg.slave_ip = \"192.168.0.172\";\nmsg.payload = { value: msg.payload, 'fc': fc, 'unitid': id, 'address': sa, 'quantity': addresses };\nreturn msg;",
+        "outputs": 1,
+        "timeout": 0,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 350,
+        "y": 120,
+        "wires": [
+            [
+                "633d64463bcb0fb3"
+            ]
+        ]
+    },
+    {
+        "id": "f4984438146c3bfc",
+        "type": "modbus-response",
+        "z": "d039c09468129985",
+        "name": "",
+        "registerShowMax": "38",
+        "x": 830,
+        "y": 120,
+        "wires": []
+    },
+    {
+        "id": "fc486fc2feda05e2",
+        "type": "modbus-flex-write",
+        "z": "d039c09468129985",
+        "name": "",
+        "showStatusActivities": true,
+        "showErrors": true,
+        "showWarnings": true,
+        "server": "2d5f4034f88a8017",
+        "emptyMsgOnFail": true,
+        "keepMsgProperties": true,
+        "delayOnStart": false,
+        "startDelayTime": "",
+        "x": 530,
+        "y": 340,
+        "wires": [
+            [
+                "5122b5d8981d39ec"
+            ],
+            [
+                "453545562e206cb2"
+            ]
+        ]
+    },
+    {
+        "id": "453545562e206cb2",
+        "type": "modbus-response",
+        "z": "d039c09468129985",
+        "name": "",
+        "registerShowMax": "1",
+        "x": 810,
+        "y": 380,
+        "wires": []
+    },
+    {
+        "id": "aa7dac339b6759ae",
+        "type": "function",
+        "z": "d039c09468129985",
+        "name": "LOAD0",
+        "func": "var id =3;\nvar fc = 5;\nvar reg_addr = 0;\nvar qty = 1;\nmsg.slave_ip = \"192.168.0.172\";\nvar slave_ip = msg.payload.slave_ip;\n\n\nmsg.payload = { value: msg.payload, 'fc': fc, 'unitid': id, 'address': reg_addr, 'quantity': qty };\nreturn msg;\n\n",
+        "outputs": 1,
+        "timeout": 0,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 320,
+        "y": 280,
+        "wires": [
+            [
+                "fc486fc2feda05e2"
+            ]
+        ]
+    },
+    {
+        "id": "3f5158e27630d379",
+        "type": "inject",
+        "z": "d039c09468129985",
+        "name": "UPS_IN OFF",
+        "props": [
+            {
+                "p": "payload"
+            },
+            {
+                "p": "topic",
+                "vt": "str"
+            }
+        ],
+        "repeat": "",
+        "crontab": "",
+        "once": true,
+        "onceDelay": 0.1,
+        "topic": "",
+        "payload": "0",
+        "payloadType": "num",
+        "x": 140,
+        "y": 380,
+        "wires": [
+            [
+                "aa7dac339b6759ae"
+            ]
+        ]
+    },
+    {
+        "id": "69514bb3f40549df",
+        "type": "inject",
+        "z": "d039c09468129985",
+        "name": "LOAD1 ON",
+        "props": [
+            {
+                "p": "payload"
+            },
+            {
+                "p": "topic",
+                "vt": "str"
+            }
+        ],
+        "repeat": "",
+        "crontab": "",
+        "once": true,
+        "onceDelay": 0.1,
+        "topic": "",
+        "payload": "1",
+        "payloadType": "num",
+        "x": 130,
+        "y": 460,
+        "wires": [
+            [
+                "72337b47aa56c5b6"
+            ]
+        ]
+    },
+    {
+        "id": "02e9487740ccee2e",
+        "type": "inject",
+        "z": "d039c09468129985",
+        "name": "LOAD1 OFF",
+        "props": [
+            {
+                "p": "payload"
+            },
+            {
+                "p": "topic",
+                "vt": "str"
+            }
+        ],
+        "repeat": "",
+        "crontab": "",
+        "once": true,
+        "onceDelay": 0.1,
+        "topic": "",
+        "payload": "0",
+        "payloadType": "num",
+        "x": 130,
+        "y": 500,
+        "wires": [
+            [
+                "72337b47aa56c5b6"
+            ]
+        ]
+    },
+    {
+        "id": "72337b47aa56c5b6",
+        "type": "function",
+        "z": "d039c09468129985",
+        "name": "LOAD 1",
+        "func": "var id =3;\nvar fc = 5;\nvar reg_addr = 1;\nvar qty = 1;\nmsg.slave_ip = \"192.168.0.172\";\nvar slave_ip = msg.payload.slave_ip;\n\nmsg.payload = { value: msg.payload, 'fc': fc, 'unitid': id, 'address': reg_addr, 'quantity': qty };\nreturn msg;\n\n",
+        "outputs": 1,
+        "timeout": 0,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 320,
+        "y": 440,
+        "wires": [
+            [
+                "fc486fc2feda05e2"
+            ]
+        ]
+    },
+    {
+        "id": "c0d952536ac5dd2e",
+        "type": "function",
+        "z": "d039c09468129985",
+        "name": "LOAD2",
+        "func": "var id =3;\nvar fc = 5;\nvar reg_addr = 2;\nvar qty = 1;\nmsg.slave_ip = \"192.168.0.172\";\nvar slave_ip = msg.payload.slave_ip;\n\nmsg.payload = { value: msg.payload, 'fc': fc, 'unitid': id, 'address': reg_addr, 'quantity': qty };\nreturn msg;\n\n",
+        "outputs": 1,
+        "timeout": 0,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 340,
+        "y": 560,
+        "wires": [
+            [
+                "fc486fc2feda05e2"
+            ]
+        ]
+    },
+    {
+        "id": "4910b281bd26c5e9",
+        "type": "inject",
+        "z": "d039c09468129985",
+        "name": "LOAD2 ON",
+        "props": [
+            {
+                "p": "payload"
+            },
+            {
+                "p": "topic",
+                "vt": "str"
+            }
+        ],
+        "repeat": "",
+        "crontab": "",
+        "once": true,
+        "onceDelay": 0.1,
+        "topic": "",
+        "payload": "1",
+        "payloadType": "num",
+        "x": 130,
+        "y": 580,
+        "wires": [
+            [
+                "c0d952536ac5dd2e"
+            ]
+        ]
+    },
+    {
+        "id": "4e5825fd48f1a42c",
+        "type": "inject",
+        "z": "d039c09468129985",
+        "name": "LOAD2 OFF",
+        "props": [
+            {
+                "p": "payload"
+            },
+            {
+                "p": "topic",
+                "vt": "str"
+            }
+        ],
+        "repeat": "",
+        "crontab": "",
+        "once": true,
+        "onceDelay": 0.1,
+        "topic": "",
+        "payload": "0",
+        "payloadType": "num",
+        "x": 130,
+        "y": 620,
+        "wires": [
+            [
+                "c0d952536ac5dd2e"
+            ]
+        ]
+    },
+    {
+        "id": "04a9104bddbefe8c",
+        "type": "inject",
+        "z": "d039c09468129985",
+        "name": "LOAD3 ON",
+        "props": [
+            {
+                "p": "payload"
+            },
+            {
+                "p": "topic",
+                "vt": "str"
+            }
+        ],
+        "repeat": "",
+        "crontab": "",
+        "once": true,
+        "onceDelay": 0.1,
+        "topic": "",
+        "payload": "1",
+        "payloadType": "num",
+        "x": 130,
+        "y": 700,
+        "wires": [
+            [
+                "643a8fe15b6afb15"
+            ]
+        ]
+    },
+    {
+        "id": "3767de29fd9fa2b9",
+        "type": "inject",
+        "z": "d039c09468129985",
+        "name": "LOAD3 OFF",
+        "props": [
+            {
+                "p": "payload"
+            },
+            {
+                "p": "topic",
+                "vt": "str"
+            }
+        ],
+        "repeat": "",
+        "crontab": "",
+        "once": true,
+        "onceDelay": 0.1,
+        "topic": "",
+        "payload": "0",
+        "payloadType": "num",
+        "x": 130,
+        "y": 740,
+        "wires": [
+            [
+                "643a8fe15b6afb15"
+            ]
+        ]
+    },
+    {
+        "id": "643a8fe15b6afb15",
+        "type": "function",
+        "z": "d039c09468129985",
+        "name": "LOAD3 ",
+        "func": "var id =3;\nvar fc = 5;\nvar reg_addr = 3;\nvar qty = 1;\nmsg.slave_ip = \"192.168.0.172\";\nvar slave_ip = msg.payload.slave_ip;\n\nmsg.payload = { value: msg.payload, 'fc': fc, 'unitid': id, 'address': reg_addr, 'quantity': qty };\nreturn msg;\n\n",
+        "outputs": 1,
+        "timeout": 0,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 340,
+        "y": 720,
+        "wires": [
+            [
+                "fc486fc2feda05e2"
+            ]
+        ]
+    },
+    {
+        "id": "783acdb545559a27",
+        "type": "inject",
+        "z": "d039c09468129985",
+        "name": "",
+        "props": [
+            {
+                "p": "payload"
+            },
+            {
+                "p": "topic",
+                "vt": "str"
+            }
+        ],
+        "repeat": "2",
+        "crontab": "",
+        "once": true,
+        "onceDelay": 0.1,
+        "topic": "",
+        "payload": "",
+        "payloadType": "date",
+        "x": 110,
+        "y": 80,
+        "wires": [
+            [
+                "b5a0086cad28a2c6",
+                "dd03fcec8e870fe5"
+            ]
+        ]
+    },
+    {
+        "id": "18374d68a11f4d32",
+        "type": "inject",
+        "z": "d039c09468129985",
+        "name": "LOAD4 ON",
+        "props": [
+            {
+                "p": "payload"
+            },
+            {
+                "p": "topic",
+                "vt": "str"
+            }
+        ],
+        "repeat": "",
+        "crontab": "",
+        "once": true,
+        "onceDelay": 0.1,
+        "topic": "",
+        "payload": "1",
+        "payloadType": "num",
+        "x": 130,
+        "y": 800,
+        "wires": [
+            [
+                "ccb72a02ed68e14d"
+            ]
+        ]
+    },
+    {
+        "id": "832f4d2729a938b4",
+        "type": "inject",
+        "z": "d039c09468129985",
+        "name": "LOAD4 OFF",
+        "props": [
+            {
+                "p": "payload"
+            },
+            {
+                "p": "topic",
+                "vt": "str"
+            }
+        ],
+        "repeat": "",
+        "crontab": "",
+        "once": true,
+        "onceDelay": 0.1,
+        "topic": "",
+        "payload": "0",
+        "payloadType": "num",
+        "x": 130,
+        "y": 840,
+        "wires": [
+            [
+                "ccb72a02ed68e14d"
+            ]
+        ]
+    },
+    {
+        "id": "ccb72a02ed68e14d",
+        "type": "function",
+        "z": "d039c09468129985",
+        "name": "LOAD4",
+        "func": "var id =3;\nvar fc = 5;\nvar reg_addr = 4;\nvar qty = 1;\nmsg.slave_ip = \"192.168.0.172\";\nvar slave_ip = msg.payload.slave_ip;\n\nmsg.payload = { value: msg.payload, 'fc': fc, 'unitid': id, 'address': reg_addr, 'quantity': qty };\nreturn msg;\n\n",
+        "outputs": 1,
+        "timeout": 0,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 340,
+        "y": 800,
+        "wires": [
+            [
+                "fc486fc2feda05e2"
+            ]
+        ]
+    },
+    {
+        "id": "5122b5d8981d39ec",
+        "type": "debug",
+        "z": "d039c09468129985",
+        "name": "debug 1",
+        "active": true,
+        "tosidebar": true,
+        "console": false,
+        "tostatus": false,
+        "complete": "false",
+        "statusVal": "",
+        "statusType": "auto",
+        "x": 760,
+        "y": 540,
+        "wires": []
+    },
+    {
+        "id": "84b6e4d59d9a782b",
+        "type": "debug",
+        "z": "d039c09468129985",
+        "name": "debug 2",
+        "active": true,
+        "tosidebar": true,
+        "console": false,
+        "tostatus": false,
+        "complete": "false",
+        "statusVal": "",
+        "statusType": "auto",
+        "x": 820,
+        "y": 220,
+        "wires": []
+    },
+    {
+        "id": "2d5f4034f88a8017",
+        "type": "modbus-client",
+        "name": "PZEM_172",
+        "clienttype": "tcp",
+        "bufferCommands": true,
+        "stateLogEnabled": false,
+        "queueLogEnabled": false,
+        "failureLogEnabled": true,
+        "tcpHost": "192.168.0.172",
+        "tcpPort": "502",
+        "tcpType": "DEFAULT",
+        "serialPort": "/dev/ttyUSB",
+        "serialType": "RTU-BUFFERD",
+        "serialBaudrate": "9600",
+        "serialDatabits": "8",
+        "serialStopbits": "1",
+        "serialParity": "none",
+        "serialConnectionDelay": "100",
+        "serialAsciiResponseStartDelimiter": "0x3A",
+        "unit_id": "1",
+        "commandDelay": "1",
+        "clientTimeout": "2000",
+        "reconnectOnTimeout": true,
+        "reconnectTimeout": "2000",
+        "parallelUnitIdsAllowed": true,
+        "showErrors": false,
+        "showWarnings": true,
+        "showLogs": true
+    }
+]
