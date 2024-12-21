@@ -696,14 +696,14 @@
         "z": "f63587bd397db4fd",
         "name": "voltage",
         "group": "965c3c29c8a0702d",
-        "order": 2,
+        "order": 1,
         "width": 3,
         "height": 3,
         "gtype": "gauge-half",
         "gstyle": "needle",
         "title": "Input Voltage",
         "units": "volt",
-        "icon": "",
+        "icon": "flash-triangle",
         "prefix": "",
         "suffix": "",
         "segments": [
@@ -762,13 +762,15 @@
             [],
             [],
             [],
-            [],
-            [],
-            [],
-            [],
             [
-                "7227b8ddcc0d49a3"
+                "99bfe34bc8c82356"
             ],
+            [
+                "5759539c31815e27"
+            ],
+            [],
+            [],
+            [],
             []
         ]
     },
@@ -804,43 +806,12 @@
         ]
     },
     {
-        "id": "7227b8ddcc0d49a3",
-        "type": "ui-number-input",
-        "z": "f63587bd397db4fd",
-        "group": "965c3c29c8a0702d",
-        "name": "",
-        "label": "number",
-        "order": 1,
-        "width": 0,
-        "height": 0,
-        "topic": "topic",
-        "topicType": "msg",
-        "min": "1",
-        "max": "1000",
-        "step": 1,
-        "tooltip": "",
-        "passthru": true,
-        "sendOnBlur": true,
-        "sendOnEnter": true,
-        "className": "",
-        "clearable": false,
-        "icon": "",
-        "iconPosition": "left",
-        "iconInnerPosition": "inside",
-        "spinner": "default",
-        "x": 1060,
-        "y": 320,
-        "wires": [
-            []
-        ]
-    },
-    {
         "id": "b47f785ea5775e47",
         "type": "ui-gauge",
         "z": "f63587bd397db4fd",
         "name": "current",
         "group": "965c3c29c8a0702d",
-        "order": 3,
+        "order": 2,
         "width": 3,
         "height": 3,
         "gtype": "gauge-half",
@@ -998,6 +969,158 @@
             [
                 "60923650e60280ae"
             ]
+        ]
+    },
+    {
+        "id": "7227b8ddcc0d49a3",
+        "type": "ui-number-input",
+        "z": "f63587bd397db4fd",
+        "group": "25b4840ae2beec11",
+        "name": "V_CF",
+        "label": "Calbration-IN VOLT",
+        "order": 6,
+        "width": 0,
+        "height": 0,
+        "topic": "topic",
+        "topicType": "msg",
+        "min": "1",
+        "max": "1000",
+        "step": 1,
+        "tooltip": "",
+        "passthru": true,
+        "sendOnBlur": true,
+        "sendOnEnter": true,
+        "className": "",
+        "clearable": false,
+        "icon": "",
+        "iconPosition": "left",
+        "iconInnerPosition": "inside",
+        "spinner": "default",
+        "x": 170,
+        "y": 900,
+        "wires": [
+            []
+        ]
+    },
+    {
+        "id": "5b96693662133869",
+        "type": "link in",
+        "z": "f63587bd397db4fd",
+        "name": "link in 1",
+        "links": [
+            "99bfe34bc8c82356"
+        ],
+        "x": 55,
+        "y": 900,
+        "wires": [
+            [
+                "7227b8ddcc0d49a3"
+            ]
+        ]
+    },
+    {
+        "id": "99bfe34bc8c82356",
+        "type": "link out",
+        "z": "f63587bd397db4fd",
+        "name": "v_cf",
+        "mode": "link",
+        "links": [
+            "5b96693662133869"
+        ],
+        "x": 965,
+        "y": 280,
+        "wires": []
+    },
+    {
+        "id": "763b8a6d784351c9",
+        "type": "ui-number-input",
+        "z": "f63587bd397db4fd",
+        "group": "25b4840ae2beec11",
+        "name": "C_CF",
+        "label": "Calbration-IN AMPS",
+        "order": 7,
+        "width": 0,
+        "height": 0,
+        "topic": "topic",
+        "topicType": "msg",
+        "min": "1",
+        "max": "1000",
+        "step": 1,
+        "tooltip": "",
+        "passthru": true,
+        "sendOnBlur": true,
+        "sendOnEnter": true,
+        "className": "",
+        "clearable": false,
+        "icon": "",
+        "iconPosition": "left",
+        "iconInnerPosition": "inside",
+        "spinner": "default",
+        "x": 170,
+        "y": 960,
+        "wires": [
+            []
+        ]
+    },
+    {
+        "id": "13005baaeec5db7e",
+        "type": "link in",
+        "z": "f63587bd397db4fd",
+        "name": "link in 2",
+        "links": [
+            "5759539c31815e27"
+        ],
+        "x": 55,
+        "y": 960,
+        "wires": [
+            [
+                "763b8a6d784351c9"
+            ]
+        ]
+    },
+    {
+        "id": "5759539c31815e27",
+        "type": "link out",
+        "z": "f63587bd397db4fd",
+        "name": "c_cf",
+        "mode": "link",
+        "links": [
+            "13005baaeec5db7e"
+        ],
+        "x": 965,
+        "y": 320,
+        "wires": []
+    },
+    {
+        "id": "2d984259c167ea5b",
+        "type": "ui-switch",
+        "z": "f63587bd397db4fd",
+        "name": "",
+        "label": "switch",
+        "group": "25b4840ae2beec11",
+        "order": 0,
+        "width": 0,
+        "height": 0,
+        "passthru": false,
+        "decouple": false,
+        "topic": "topic",
+        "topicType": "msg",
+        "style": "",
+        "className": "",
+        "layout": "row-spread",
+        "clickableArea": "switch",
+        "onvalue": "true",
+        "onvalueType": "bool",
+        "onicon": "",
+        "oncolor": "",
+        "offvalue": "false",
+        "offvalueType": "bool",
+        "officon": "",
+        "offcolor": "",
+        "x": 110,
+        "y": 1040,
+        "wires": [
+            []
         ]
     },
     {
