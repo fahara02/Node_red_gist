@@ -1,0 +1,2210 @@
+[
+    {
+        "id": "f63587bd397db4fd",
+        "type": "tab",
+        "label": "MODBUS_SERVER",
+        "disabled": false,
+        "info": "",
+        "env": []
+    },
+    {
+        "id": "975f5a25aa9a015a",
+        "type": "function",
+        "z": "f63587bd397db4fd",
+        "name": "parse_modbus_message",
+        "func": "// Input data (replace with msg.payload or modify accordingly)\nconst inputArray = msg.payload; // Assume payload is the array you provided.\n\n// Initialize parsing index\nlet index = 0;\n\n// Helper function to convert two 16-bit registers into a float\nfunction parseFloat16(high, low) {\n    const intBits = (high << 16) | low;\n    return new Float32Array(new Uint32Array([intBits]).buffer)[0];\n}\n\n// Helper function to parse 64-bit integers from four 16-bit registers\nfunction parseInt64(highHigh, highLow, lowHigh, lowLow) {\n    const high = (highHigh << 16) | highLow;\n    const low = (lowHigh << 16) | lowLow;\n    return (BigInt(high) << 32n) | BigInt(low);  // Convert to BigInt to handle 64-bit values\n}\n\n// Parse NamePlate information\nconst parsedData = {};\n\nparsedData.id = inputArray[index++];\nparsedData.type = inputArray[index++];\n\n\n// Parse Voltage, Current, Power, Energy, Frequency, Power Factor, Alarm Status\nparsedData.voltage = parseFloat16(inputArray[index++], inputArray[index++]);\nparsedData.current = parseFloat16(inputArray[index++], inputArray[index++]);\nparsedData.power = parseFloat16(inputArray[index++], inputArray[index++]);\nparsedData.energy = parseFloat16(inputArray[index++], inputArray[index++]);\nparsedData.frequency = parseFloat16(inputArray[index++], inputArray[index++]);\nparsedData.powerFactor = parseFloat16(inputArray[index++], inputArray[index++]);\nparsedData.isValid=Boolean(inputArray[index++]);\nparsedData.voltage_cf=inputArray[index++];\nparsedData.current_cf=inputArray[index++];\nparsedData.power_cf=inputArray[index++];\nparsedData.energy_cf=inputArray[index++];\nparsedData.pf_cf=inputArray[index++];\nparsedData.frq_cf=inputArray[index++];\n\n\n\n// Output parsed data\nmsg.payload = parsedData;\nreturn msg;\n",
+        "outputs": 1,
+        "timeout": 0,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 570,
+        "y": 120,
+        "wires": [
+            [
+                "28b711217778c7ce"
+            ]
+        ]
+    },
+    {
+        "id": "8fbbdefac7b9d763",
+        "type": "function",
+        "z": "f63587bd397db4fd",
+        "name": "read power",
+        "func": "var id =1;\nvar fc = 3;\nvar sa = 0;\nvar addresses = 21;\nvar slave_ip = msg.payload.slave_ip;\nmsg.slave_ip = \"192.168.0.172\";\nmsg.payload = { value: msg.payload, 'fc': fc, 'unitid': id, 'address': sa, 'quantity': addresses };\nreturn msg;",
+        "outputs": 1,
+        "timeout": 0,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 290,
+        "y": 60,
+        "wires": [
+            [
+                "b6583eb8e0b74433"
+            ]
+        ]
+    },
+    {
+        "id": "44621baa3bd46baa",
+        "type": "inject",
+        "z": "f63587bd397db4fd",
+        "name": "UPS_IN ON",
+        "props": [
+            {
+                "p": "payload"
+            },
+            {
+                "p": "topic",
+                "vt": "str"
+            }
+        ],
+        "repeat": "",
+        "crontab": "",
+        "once": true,
+        "onceDelay": 0.1,
+        "topic": "",
+        "payload": "1",
+        "payloadType": "num",
+        "x": 130,
+        "y": 300,
+        "wires": [
+            [
+                "9697e0a7d7f30a6b"
+            ]
+        ]
+    },
+    {
+        "id": "b6583eb8e0b74433",
+        "type": "modbus-flex-getter",
+        "z": "f63587bd397db4fd",
+        "name": "",
+        "showStatusActivities": true,
+        "showErrors": true,
+        "showWarnings": true,
+        "logIOActivities": false,
+        "server": "1b9a4f1511420284",
+        "useIOFile": false,
+        "ioFile": "",
+        "useIOForPayload": false,
+        "emptyMsgOnFail": true,
+        "keepMsgProperties": true,
+        "delayOnStart": false,
+        "startDelayTime": "",
+        "x": 550,
+        "y": 60,
+        "wires": [
+            [
+                "975f5a25aa9a015a"
+            ],
+            [
+                "17ef72ab38e44a76"
+            ]
+        ]
+    },
+    {
+        "id": "12ec7556a30ca129",
+        "type": "function",
+        "z": "f63587bd397db4fd",
+        "name": "read power",
+        "func": "var id =2;\nvar fc = 3;\nvar sa = 0;\nvar addresses = 21;\nvar slave_ip = msg.payload.slave_ip;\nmsg.slave_ip = \"192.168.0.172\";\nmsg.payload = { value: msg.payload, 'fc': fc, 'unitid': id, 'address': sa, 'quantity': addresses };\nreturn msg;",
+        "outputs": 1,
+        "timeout": 0,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 310,
+        "y": 140,
+        "wires": [
+            [
+                "b6583eb8e0b74433"
+            ]
+        ]
+    },
+    {
+        "id": "17ef72ab38e44a76",
+        "type": "modbus-response",
+        "z": "f63587bd397db4fd",
+        "name": "",
+        "registerShowMax": "38",
+        "x": 770,
+        "y": 40,
+        "wires": []
+    },
+    {
+        "id": "67996d9083641303",
+        "type": "modbus-flex-write",
+        "z": "f63587bd397db4fd",
+        "name": "",
+        "showStatusActivities": true,
+        "showErrors": true,
+        "showWarnings": true,
+        "server": "1b9a4f1511420284",
+        "emptyMsgOnFail": true,
+        "keepMsgProperties": true,
+        "delayOnStart": false,
+        "startDelayTime": "",
+        "x": 530,
+        "y": 340,
+        "wires": [
+            [
+                "1de6c45fd66d6aad"
+            ],
+            [
+                "e931437db05081ee"
+            ]
+        ]
+    },
+    {
+        "id": "e931437db05081ee",
+        "type": "modbus-response",
+        "z": "f63587bd397db4fd",
+        "name": "",
+        "registerShowMax": "1",
+        "x": 810,
+        "y": 380,
+        "wires": []
+    },
+    {
+        "id": "9697e0a7d7f30a6b",
+        "type": "function",
+        "z": "f63587bd397db4fd",
+        "name": "LOAD0",
+        "func": "var id =3;\nvar fc = 5;\nvar reg_addr = 0;\nvar qty = 1;\nmsg.slave_ip = \"192.168.0.172\";\nvar slave_ip = msg.payload.slave_ip;\n\n\nmsg.payload = { value: msg.payload, 'fc': fc, 'unitid': id, 'address': reg_addr, 'quantity': qty };\nreturn msg;\n\n",
+        "outputs": 1,
+        "timeout": 0,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 320,
+        "y": 280,
+        "wires": [
+            [
+                "67996d9083641303"
+            ]
+        ]
+    },
+    {
+        "id": "d2b331f4f521cadc",
+        "type": "inject",
+        "z": "f63587bd397db4fd",
+        "name": "UPS_IN OFF",
+        "props": [
+            {
+                "p": "payload"
+            },
+            {
+                "p": "topic",
+                "vt": "str"
+            }
+        ],
+        "repeat": "",
+        "crontab": "",
+        "once": true,
+        "onceDelay": 0.1,
+        "topic": "",
+        "payload": "0",
+        "payloadType": "num",
+        "x": 140,
+        "y": 380,
+        "wires": [
+            [
+                "9697e0a7d7f30a6b"
+            ]
+        ]
+    },
+    {
+        "id": "d5674b2d086141b8",
+        "type": "inject",
+        "z": "f63587bd397db4fd",
+        "name": "LOAD1 ON",
+        "props": [
+            {
+                "p": "payload"
+            },
+            {
+                "p": "topic",
+                "vt": "str"
+            }
+        ],
+        "repeat": "",
+        "crontab": "",
+        "once": true,
+        "onceDelay": 0.1,
+        "topic": "",
+        "payload": "1",
+        "payloadType": "num",
+        "x": 130,
+        "y": 460,
+        "wires": [
+            [
+                "0367c74c55a0563e"
+            ]
+        ]
+    },
+    {
+        "id": "6aed9c0cbf99e126",
+        "type": "inject",
+        "z": "f63587bd397db4fd",
+        "name": "LOAD1 OFF",
+        "props": [
+            {
+                "p": "payload"
+            },
+            {
+                "p": "topic",
+                "vt": "str"
+            }
+        ],
+        "repeat": "",
+        "crontab": "",
+        "once": true,
+        "onceDelay": 0.1,
+        "topic": "",
+        "payload": "0",
+        "payloadType": "num",
+        "x": 130,
+        "y": 500,
+        "wires": [
+            [
+                "0367c74c55a0563e"
+            ]
+        ]
+    },
+    {
+        "id": "0367c74c55a0563e",
+        "type": "function",
+        "z": "f63587bd397db4fd",
+        "name": "LOAD 1",
+        "func": "var id =3;\nvar fc = 5;\nvar reg_addr = 1;\nvar qty = 1;\nmsg.slave_ip = \"192.168.0.172\";\nvar slave_ip = msg.payload.slave_ip;\n\nmsg.payload = { value: msg.payload, 'fc': fc, 'unitid': id, 'address': reg_addr, 'quantity': qty };\nreturn msg;\n\n",
+        "outputs": 1,
+        "timeout": 0,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 320,
+        "y": 440,
+        "wires": [
+            [
+                "67996d9083641303"
+            ]
+        ]
+    },
+    {
+        "id": "89867093759f1dd5",
+        "type": "function",
+        "z": "f63587bd397db4fd",
+        "name": "LOAD2",
+        "func": "var id =3;\nvar fc = 5;\nvar reg_addr = 2;\nvar qty = 1;\nmsg.slave_ip = \"192.168.0.172\";\nvar slave_ip = msg.payload.slave_ip;\n\nmsg.payload = { value: msg.payload, 'fc': fc, 'unitid': id, 'address': reg_addr, 'quantity': qty };\nreturn msg;\n\n",
+        "outputs": 1,
+        "timeout": 0,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 340,
+        "y": 560,
+        "wires": [
+            [
+                "67996d9083641303"
+            ]
+        ]
+    },
+    {
+        "id": "0357eacafe5fbb58",
+        "type": "inject",
+        "z": "f63587bd397db4fd",
+        "name": "LOAD2 ON",
+        "props": [
+            {
+                "p": "payload"
+            },
+            {
+                "p": "topic",
+                "vt": "str"
+            }
+        ],
+        "repeat": "",
+        "crontab": "",
+        "once": true,
+        "onceDelay": 0.1,
+        "topic": "",
+        "payload": "1",
+        "payloadType": "num",
+        "x": 130,
+        "y": 580,
+        "wires": [
+            [
+                "89867093759f1dd5"
+            ]
+        ]
+    },
+    {
+        "id": "0a43ec2d7dfc3443",
+        "type": "inject",
+        "z": "f63587bd397db4fd",
+        "name": "LOAD2 OFF",
+        "props": [
+            {
+                "p": "payload"
+            },
+            {
+                "p": "topic",
+                "vt": "str"
+            }
+        ],
+        "repeat": "",
+        "crontab": "",
+        "once": true,
+        "onceDelay": 0.1,
+        "topic": "",
+        "payload": "0",
+        "payloadType": "num",
+        "x": 130,
+        "y": 620,
+        "wires": [
+            [
+                "89867093759f1dd5"
+            ]
+        ]
+    },
+    {
+        "id": "b8767b3e7bf11fc3",
+        "type": "inject",
+        "z": "f63587bd397db4fd",
+        "name": "LOAD3 ON",
+        "props": [
+            {
+                "p": "payload"
+            },
+            {
+                "p": "topic",
+                "vt": "str"
+            }
+        ],
+        "repeat": "",
+        "crontab": "",
+        "once": true,
+        "onceDelay": 0.1,
+        "topic": "",
+        "payload": "1",
+        "payloadType": "num",
+        "x": 130,
+        "y": 700,
+        "wires": [
+            [
+                "647cab74979f6ef4"
+            ]
+        ]
+    },
+    {
+        "id": "698c6317c251cc1a",
+        "type": "inject",
+        "z": "f63587bd397db4fd",
+        "name": "LOAD3 OFF",
+        "props": [
+            {
+                "p": "payload"
+            },
+            {
+                "p": "topic",
+                "vt": "str"
+            }
+        ],
+        "repeat": "",
+        "crontab": "",
+        "once": true,
+        "onceDelay": 0.1,
+        "topic": "",
+        "payload": "0",
+        "payloadType": "num",
+        "x": 130,
+        "y": 740,
+        "wires": [
+            [
+                "647cab74979f6ef4"
+            ]
+        ]
+    },
+    {
+        "id": "647cab74979f6ef4",
+        "type": "function",
+        "z": "f63587bd397db4fd",
+        "name": "LOAD3 ",
+        "func": "var id =3;\nvar fc = 5;\nvar reg_addr = 3;\nvar qty = 1;\nmsg.slave_ip = \"192.168.0.172\";\nvar slave_ip = msg.payload.slave_ip;\n\nmsg.payload = { value: msg.payload, 'fc': fc, 'unitid': id, 'address': reg_addr, 'quantity': qty };\nreturn msg;\n\n",
+        "outputs": 1,
+        "timeout": 0,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 340,
+        "y": 720,
+        "wires": [
+            [
+                "67996d9083641303"
+            ]
+        ]
+    },
+    {
+        "id": "2823986f2377d87c",
+        "type": "inject",
+        "z": "f63587bd397db4fd",
+        "name": "",
+        "props": [
+            {
+                "p": "payload"
+            },
+            {
+                "p": "topic",
+                "vt": "str"
+            }
+        ],
+        "repeat": "1",
+        "crontab": "",
+        "once": true,
+        "onceDelay": 0.1,
+        "topic": "",
+        "payload": "",
+        "payloadType": "date",
+        "x": 110,
+        "y": 80,
+        "wires": [
+            [
+                "8fbbdefac7b9d763",
+                "12ec7556a30ca129"
+            ]
+        ]
+    },
+    {
+        "id": "d42c5b54d85385c5",
+        "type": "inject",
+        "z": "f63587bd397db4fd",
+        "name": "LOAD4 ON",
+        "props": [
+            {
+                "p": "payload"
+            },
+            {
+                "p": "topic",
+                "vt": "str"
+            }
+        ],
+        "repeat": "",
+        "crontab": "",
+        "once": true,
+        "onceDelay": 0.1,
+        "topic": "",
+        "payload": "1",
+        "payloadType": "num",
+        "x": 130,
+        "y": 800,
+        "wires": [
+            [
+                "60923650e60280ae"
+            ]
+        ]
+    },
+    {
+        "id": "93f0331eaf87eae4",
+        "type": "inject",
+        "z": "f63587bd397db4fd",
+        "name": "LOAD4 OFF",
+        "props": [
+            {
+                "p": "payload"
+            },
+            {
+                "p": "topic",
+                "vt": "str"
+            }
+        ],
+        "repeat": "",
+        "crontab": "",
+        "once": true,
+        "onceDelay": 0.1,
+        "topic": "",
+        "payload": "0",
+        "payloadType": "num",
+        "x": 130,
+        "y": 840,
+        "wires": [
+            [
+                "60923650e60280ae"
+            ]
+        ]
+    },
+    {
+        "id": "60923650e60280ae",
+        "type": "function",
+        "z": "f63587bd397db4fd",
+        "name": "LOAD4",
+        "func": "var id =3;\nvar fc = 5;\nvar reg_addr = 4;\nvar qty = 1;\nmsg.slave_ip = \"192.168.0.172\";\nvar slave_ip = msg.payload.slave_ip;\n\nmsg.payload = { value: msg.payload, 'fc': fc, 'unitid': id, 'address': reg_addr, 'quantity': qty };\nreturn msg;\n\n",
+        "outputs": 1,
+        "timeout": 0,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 340,
+        "y": 800,
+        "wires": [
+            [
+                "67996d9083641303"
+            ]
+        ]
+    },
+    {
+        "id": "1de6c45fd66d6aad",
+        "type": "debug",
+        "z": "f63587bd397db4fd",
+        "name": "debug 1",
+        "active": true,
+        "tosidebar": true,
+        "console": false,
+        "tostatus": false,
+        "complete": "false",
+        "statusVal": "",
+        "statusType": "auto",
+        "x": 760,
+        "y": 540,
+        "wires": []
+    },
+    {
+        "id": "8a9f7355422adb98",
+        "type": "debug",
+        "z": "f63587bd397db4fd",
+        "name": "debug 2",
+        "active": true,
+        "tosidebar": true,
+        "console": false,
+        "tostatus": false,
+        "complete": "false",
+        "statusVal": "",
+        "statusType": "auto",
+        "x": 940,
+        "y": 80,
+        "wires": []
+    },
+    {
+        "id": "28b711217778c7ce",
+        "type": "switch",
+        "z": "f63587bd397db4fd",
+        "name": "",
+        "property": "payload.id",
+        "propertyType": "msg",
+        "rules": [
+            {
+                "t": "eq",
+                "v": "39",
+                "vt": "str"
+            },
+            {
+                "t": "eq",
+                "v": "43",
+                "vt": "str"
+            }
+        ],
+        "checkall": "true",
+        "repair": false,
+        "outputs": 2,
+        "x": 370,
+        "y": 200,
+        "wires": [
+            [
+                "f54c34302e14930e"
+            ],
+            [
+                "eb01d8a547251e62"
+            ]
+        ]
+    },
+    {
+        "id": "5b96693662133869",
+        "type": "link in",
+        "z": "f63587bd397db4fd",
+        "name": "link in 1",
+        "links": [
+            "99bfe34bc8c82356"
+        ],
+        "x": 55,
+        "y": 900,
+        "wires": [
+            [
+                "7227b8ddcc0d49a3"
+            ]
+        ]
+    },
+    {
+        "id": "99bfe34bc8c82356",
+        "type": "link out",
+        "z": "f63587bd397db4fd",
+        "name": "v_cf",
+        "mode": "link",
+        "links": [
+            "5b96693662133869"
+        ],
+        "x": 1245,
+        "y": 260,
+        "wires": []
+    },
+    {
+        "id": "13005baaeec5db7e",
+        "type": "link in",
+        "z": "f63587bd397db4fd",
+        "name": "link in 2",
+        "links": [
+            "5759539c31815e27"
+        ],
+        "x": 55,
+        "y": 960,
+        "wires": [
+            [
+                "763b8a6d784351c9"
+            ]
+        ]
+    },
+    {
+        "id": "5759539c31815e27",
+        "type": "link out",
+        "z": "f63587bd397db4fd",
+        "name": "c_cf",
+        "mode": "link",
+        "links": [
+            "13005baaeec5db7e"
+        ],
+        "x": 1235,
+        "y": 300,
+        "wires": []
+    },
+    {
+        "id": "f54c34302e14930e",
+        "type": "function",
+        "z": "f63587bd397db4fd",
+        "name": "INPUT_POWER",
+        "func": "const parsedData=msg.payload;\n\nconst outputs = [\n    { payload: parsedData.id  },\n    { payload: parsedData.type  },\n    { payload: Math.round( parsedData.voltage*1000 )/1000 },\n    { payload: Math.round( parsedData.current*1000 ) /1000},\n    { payload: Math.round( parsedData.power*1000) /1000},\n    { payload: Math.round(parsedData.energy*1000 )/1000 },\n    { payload: Math.round(parsedData.frequency*1000)/1000  },\n    { payload:  Math.round(parsedData.powerFactor*1000)/1000  },\n    { payload:  parsedData.isValid  },\n    { payload:  parsedData.voltage_cf  },\n    { payload:  parsedData.current_cf  },\n    { payload: parsedData.power_cf },\n    { payload:  parsedData.energy_cf  },\n    { payload:parsedData.pf_cf  },\n    { payload:  parsedData.frq_cf  },\n];\nreturn outputs;",
+        "outputs": 15,
+        "timeout": 0,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 1040,
+        "y": 240,
+        "wires": [
+            [],
+            [],
+            [
+                "e78900a38f0465c4"
+            ],
+            [
+                "b47f785ea5775e47"
+            ],
+            [
+                "b126125a7e1d030d"
+            ],
+            [],
+            [
+                "f6ef5ed7574a4b81"
+            ],
+            [
+                "48ee54f35f52d3bc"
+            ],
+            [],
+            [
+                "99bfe34bc8c82356"
+            ],
+            [
+                "5759539c31815e27"
+            ],
+            [],
+            [],
+            [],
+            []
+        ]
+    },
+    {
+        "id": "eb01d8a547251e62",
+        "type": "function",
+        "z": "f63587bd397db4fd",
+        "name": "OUTPUT_POWER",
+        "func": "const parsedData=msg.payload;\n\nconst outputs = [\n    { payload: parsedData.id  },\n    { payload: parsedData.type  },\n    { payload: Math.round( parsedData.voltage*1000 )/1000 },\n    { payload: Math.round( parsedData.current*1000 ) /1000},\n    { payload: Math.round( parsedData.power*1000) /1000},\n    { payload: Math.round(parsedData.energy*1000 )/1000 },\n    { payload: Math.round(parsedData.frequency*1000)/1000  },\n    { payload:  Math.round(parsedData.powerFactor*1000)/1000  },\n    { payload:  parsedData.isValid  },\n    { payload:  parsedData.voltage_cf  },\n    { payload:  parsedData.current_cf  },\n    { payload: parsedData.power_cf },\n    { payload:  parsedData.energy_cf  },\n    { payload:parsedData.pf_cf  },\n    { payload:  parsedData.frq_cf  },\n];\nreturn outputs;",
+        "outputs": 15,
+        "timeout": 0,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 1070,
+        "y": 500,
+        "wires": [
+            [],
+            [],
+            [
+                "9ce928176da5efa4"
+            ],
+            [
+                "e43c7bc16b7a9c0d"
+            ],
+            [
+                "a02c8bc3158b88c4"
+            ],
+            [],
+            [
+                "91186b8eb51b1047"
+            ],
+            [
+                "577df906386ed8df"
+            ],
+            [],
+            [],
+            [],
+            [],
+            [],
+            [],
+            []
+        ]
+    },
+    {
+        "id": "7227b8ddcc0d49a3",
+        "type": "ui-number-input",
+        "z": "f63587bd397db4fd",
+        "group": "0282c4d64488b8ca",
+        "name": "V_CF",
+        "label": "Calbration-IN VOLT",
+        "order": 1,
+        "width": 0,
+        "height": 0,
+        "topic": "topic",
+        "topicType": "msg",
+        "min": "1",
+        "max": "1000",
+        "step": 1,
+        "tooltip": "",
+        "passthru": true,
+        "sendOnBlur": true,
+        "sendOnEnter": true,
+        "className": "",
+        "clearable": false,
+        "icon": "",
+        "iconPosition": "left",
+        "iconInnerPosition": "inside",
+        "spinner": "default",
+        "x": 170,
+        "y": 900,
+        "wires": [
+            []
+        ]
+    },
+    {
+        "id": "763b8a6d784351c9",
+        "type": "ui-number-input",
+        "z": "f63587bd397db4fd",
+        "group": "0282c4d64488b8ca",
+        "name": "C_CF",
+        "label": "Calbration-IN AMPS",
+        "order": 2,
+        "width": 0,
+        "height": 0,
+        "topic": "topic",
+        "topicType": "msg",
+        "min": "1",
+        "max": "1000",
+        "step": 1,
+        "tooltip": "",
+        "passthru": true,
+        "sendOnBlur": true,
+        "sendOnEnter": true,
+        "className": "",
+        "clearable": false,
+        "icon": "",
+        "iconPosition": "left",
+        "iconInnerPosition": "inside",
+        "spinner": "default",
+        "x": 170,
+        "y": 960,
+        "wires": [
+            []
+        ]
+    },
+    {
+        "id": "d40e471b585a6f0b",
+        "type": "ui-button-group",
+        "z": "f63587bd397db4fd",
+        "name": "",
+        "group": "25b4840ae2beec11",
+        "order": 1,
+        "width": 3,
+        "height": 1,
+        "label": "MAINS INPUT",
+        "className": "",
+        "rounded": true,
+        "useThemeColors": true,
+        "passthru": false,
+        "options": [
+            {
+                "label": "OFF",
+                "icon": "lightbulb-off",
+                "value": "0",
+                "valueType": "num",
+                "color": "#009933"
+            },
+            {
+                "label": "ON",
+                "icon": "lightbulb-on",
+                "value": "1",
+                "valueType": "num",
+                "color": "#999999"
+            }
+        ],
+        "topic": "topic",
+        "topicType": "msg",
+        "x": 100,
+        "y": 200,
+        "wires": [
+            [
+                "9697e0a7d7f30a6b"
+            ]
+        ]
+    },
+    {
+        "id": "3e33c2322f370e73",
+        "type": "ui-button-group",
+        "z": "f63587bd397db4fd",
+        "name": "",
+        "group": "25b4840ae2beec11",
+        "order": 2,
+        "width": 3,
+        "height": 1,
+        "label": "LOAD BANK1 ",
+        "className": "",
+        "rounded": true,
+        "useThemeColors": true,
+        "passthru": false,
+        "options": [
+            {
+                "label": "OFF",
+                "icon": "lightbulb-off",
+                "value": "0",
+                "valueType": "num",
+                "color": "#009933"
+            },
+            {
+                "label": "ON",
+                "icon": "lightbulb-on",
+                "value": "1",
+                "valueType": "num",
+                "color": "#999999"
+            }
+        ],
+        "topic": "topic",
+        "topicType": "msg",
+        "x": 80,
+        "y": 420,
+        "wires": [
+            [
+                "0367c74c55a0563e",
+                "1671e19a5e66f655"
+            ]
+        ]
+    },
+    {
+        "id": "220c6b044f93e1df",
+        "type": "ui-button-group",
+        "z": "f63587bd397db4fd",
+        "name": "",
+        "group": "25b4840ae2beec11",
+        "order": 3,
+        "width": 3,
+        "height": 1,
+        "label": "LOAD BANK2",
+        "className": "",
+        "rounded": true,
+        "useThemeColors": true,
+        "passthru": false,
+        "options": [
+            {
+                "label": "OFF",
+                "icon": "lightbulb-off",
+                "value": "0",
+                "valueType": "num",
+                "color": "#009933"
+            },
+            {
+                "label": "ON",
+                "icon": "lightbulb-on",
+                "value": "1",
+                "valueType": "num",
+                "color": "#999999"
+            }
+        ],
+        "topic": "topic",
+        "topicType": "msg",
+        "x": 80,
+        "y": 540,
+        "wires": [
+            [
+                "89867093759f1dd5",
+                "b6030f1b24bcd31e"
+            ]
+        ]
+    },
+    {
+        "id": "18530d0796d78a16",
+        "type": "ui-button-group",
+        "z": "f63587bd397db4fd",
+        "name": "",
+        "group": "25b4840ae2beec11",
+        "order": 4,
+        "width": 3,
+        "height": 1,
+        "label": "LOAD BANK3",
+        "className": "",
+        "rounded": true,
+        "useThemeColors": true,
+        "passthru": false,
+        "options": [
+            {
+                "label": "OFF",
+                "icon": "lightbulb-off",
+                "value": "0",
+                "valueType": "num",
+                "color": "#009933"
+            },
+            {
+                "label": "ON",
+                "icon": "lightbulb-on",
+                "value": "1",
+                "valueType": "num",
+                "color": "#999999"
+            }
+        ],
+        "topic": "topic",
+        "topicType": "msg",
+        "x": 80,
+        "y": 680,
+        "wires": [
+            [
+                "647cab74979f6ef4",
+                "a11320e615ab1dc7"
+            ]
+        ]
+    },
+    {
+        "id": "952c3c97dde96b1c",
+        "type": "ui-button-group",
+        "z": "f63587bd397db4fd",
+        "name": "",
+        "group": "25b4840ae2beec11",
+        "order": 5,
+        "width": 3,
+        "height": 1,
+        "label": "ALARM",
+        "className": "",
+        "rounded": true,
+        "useThemeColors": true,
+        "passthru": false,
+        "options": [
+            {
+                "label": "OFF",
+                "icon": "lightbulb-off",
+                "value": "0",
+                "valueType": "num",
+                "color": "#009933"
+            },
+            {
+                "label": "ON",
+                "icon": "lightbulb-on",
+                "value": "1",
+                "valueType": "num",
+                "color": "#999999"
+            }
+        ],
+        "topic": "topic",
+        "topicType": "msg",
+        "x": 60,
+        "y": 780,
+        "wires": [
+            [
+                "60923650e60280ae",
+                "2a2bc9032f6f372f"
+            ]
+        ]
+    },
+    {
+        "id": "e78900a38f0465c4",
+        "type": "ui-gauge",
+        "z": "f63587bd397db4fd",
+        "name": "voltage",
+        "group": "965c3c29c8a0702d",
+        "order": 1,
+        "width": 3,
+        "height": 3,
+        "gtype": "gauge-half",
+        "gstyle": "needle",
+        "title": "Input Voltage",
+        "units": "volt",
+        "icon": "flash-triangle",
+        "prefix": "",
+        "suffix": "",
+        "segments": [
+            {
+                "from": "0",
+                "color": "#d65cd2"
+            },
+            {
+                "from": "180",
+                "color": "#48cd2d"
+            },
+            {
+                "from": "245",
+                "color": "#1edc67"
+            },
+            {
+                "from": "231",
+                "color": "#ea5353"
+            }
+        ],
+        "min": 0,
+        "max": "300",
+        "sizeThickness": 16,
+        "sizeGap": 4,
+        "sizeKeyThickness": 8,
+        "styleRounded": true,
+        "styleGlow": false,
+        "className": "",
+        "x": 1280,
+        "y": 60,
+        "wires": []
+    },
+    {
+        "id": "b47f785ea5775e47",
+        "type": "ui-gauge",
+        "z": "f63587bd397db4fd",
+        "name": "current",
+        "group": "965c3c29c8a0702d",
+        "order": 2,
+        "width": 3,
+        "height": 3,
+        "gtype": "gauge-half",
+        "gstyle": "needle",
+        "title": "Input Current",
+        "units": "amp",
+        "icon": "",
+        "prefix": "",
+        "suffix": "",
+        "segments": [
+            {
+                "from": "0",
+                "color": "#d65cd2"
+            },
+            {
+                "from": "1",
+                "color": "#48cd2d"
+            },
+            {
+                "from": "28",
+                "color": "#1edc67"
+            },
+            {
+                "from": "30",
+                "color": "#ea5353"
+            }
+        ],
+        "min": 0,
+        "max": "30",
+        "sizeThickness": 16,
+        "sizeGap": 4,
+        "sizeKeyThickness": 8,
+        "styleRounded": true,
+        "styleGlow": false,
+        "className": "",
+        "x": 1280,
+        "y": 100,
+        "wires": []
+    },
+    {
+        "id": "b126125a7e1d030d",
+        "type": "ui-gauge",
+        "z": "f63587bd397db4fd",
+        "name": "power",
+        "group": "965c3c29c8a0702d",
+        "order": 3,
+        "width": 3,
+        "height": 3,
+        "gtype": "gauge-34",
+        "gstyle": "needle",
+        "title": "Input Power",
+        "units": "watt",
+        "icon": "",
+        "prefix": "",
+        "suffix": "",
+        "segments": [
+            {
+                "from": "0",
+                "color": "#d65cd2"
+            },
+            {
+                "from": "1000",
+                "color": "#48cd2d"
+            },
+            {
+                "from": "2800",
+                "color": "#1edc67"
+            },
+            {
+                "from": "4000",
+                "color": "#ea5353"
+            }
+        ],
+        "min": 0,
+        "max": "5000",
+        "sizeThickness": 16,
+        "sizeGap": 4,
+        "sizeKeyThickness": 8,
+        "styleRounded": true,
+        "styleGlow": false,
+        "className": "",
+        "x": 1270,
+        "y": 140,
+        "wires": []
+    },
+    {
+        "id": "f6ef5ed7574a4b81",
+        "type": "ui-gauge",
+        "z": "f63587bd397db4fd",
+        "name": "frequency",
+        "group": "965c3c29c8a0702d",
+        "order": 4,
+        "width": 3,
+        "height": 3,
+        "gtype": "gauge-34",
+        "gstyle": "needle",
+        "title": "Input Frequency",
+        "units": "Hz",
+        "icon": "",
+        "prefix": "",
+        "suffix": "",
+        "segments": [
+            {
+                "from": "0",
+                "color": "#d65cd2"
+            },
+            {
+                "from": "40",
+                "color": "#48cd2d"
+            },
+            {
+                "from": "50",
+                "color": "#1edc67"
+            },
+            {
+                "from": "60",
+                "color": "#ea5353"
+            }
+        ],
+        "min": 0,
+        "max": "60",
+        "sizeThickness": 16,
+        "sizeGap": 4,
+        "sizeKeyThickness": 8,
+        "styleRounded": true,
+        "styleGlow": false,
+        "className": "",
+        "x": 1280,
+        "y": 180,
+        "wires": []
+    },
+    {
+        "id": "48ee54f35f52d3bc",
+        "type": "ui-gauge",
+        "z": "f63587bd397db4fd",
+        "name": "pf",
+        "group": "965c3c29c8a0702d",
+        "order": 5,
+        "width": 3,
+        "height": 3,
+        "gtype": "gauge-34",
+        "gstyle": "needle",
+        "title": "Input PowerFactor",
+        "units": "",
+        "icon": "",
+        "prefix": "",
+        "suffix": "",
+        "segments": [
+            {
+                "from": "0",
+                "color": "#d65cd2"
+            },
+            {
+                "from": "0.8",
+                "color": "#48cd2d"
+            },
+            {
+                "from": "0.9",
+                "color": "#1edc67"
+            },
+            {
+                "from": "1",
+                "color": "#ea5353"
+            }
+        ],
+        "min": 0,
+        "max": "1",
+        "sizeThickness": 16,
+        "sizeGap": 4,
+        "sizeKeyThickness": 8,
+        "styleRounded": true,
+        "styleGlow": false,
+        "className": "",
+        "x": 1270,
+        "y": 220,
+        "wires": []
+    },
+    {
+        "id": "9ce928176da5efa4",
+        "type": "ui-gauge",
+        "z": "f63587bd397db4fd",
+        "name": "voltage",
+        "group": "defddbc9224eb150",
+        "order": 1,
+        "width": 3,
+        "height": 3,
+        "gtype": "gauge-half",
+        "gstyle": "needle",
+        "title": "Output Voltage",
+        "units": "volt",
+        "icon": "flash-triangle",
+        "prefix": "",
+        "suffix": "",
+        "segments": [
+            {
+                "from": "0",
+                "color": "#d65cd2"
+            },
+            {
+                "from": "180",
+                "color": "#48cd2d"
+            },
+            {
+                "from": "245",
+                "color": "#1edc67"
+            },
+            {
+                "from": "231",
+                "color": "#ea5353"
+            }
+        ],
+        "min": 0,
+        "max": "300",
+        "sizeThickness": 16,
+        "sizeGap": 4,
+        "sizeKeyThickness": 8,
+        "styleRounded": true,
+        "styleGlow": false,
+        "className": "",
+        "x": 1300,
+        "y": 440,
+        "wires": []
+    },
+    {
+        "id": "e43c7bc16b7a9c0d",
+        "type": "ui-gauge",
+        "z": "f63587bd397db4fd",
+        "name": "current",
+        "group": "defddbc9224eb150",
+        "order": 2,
+        "width": 3,
+        "height": 3,
+        "gtype": "gauge-half",
+        "gstyle": "needle",
+        "title": "Output Current",
+        "units": "amp",
+        "icon": "",
+        "prefix": "",
+        "suffix": "",
+        "segments": [
+            {
+                "from": "0",
+                "color": "#d65cd2"
+            },
+            {
+                "from": "1",
+                "color": "#48cd2d"
+            },
+            {
+                "from": "28",
+                "color": "#1edc67"
+            },
+            {
+                "from": "30",
+                "color": "#ea5353"
+            }
+        ],
+        "min": 0,
+        "max": "30",
+        "sizeThickness": 16,
+        "sizeGap": 4,
+        "sizeKeyThickness": 8,
+        "styleRounded": true,
+        "styleGlow": false,
+        "className": "",
+        "x": 1300,
+        "y": 480,
+        "wires": []
+    },
+    {
+        "id": "a02c8bc3158b88c4",
+        "type": "ui-gauge",
+        "z": "f63587bd397db4fd",
+        "name": "power",
+        "group": "defddbc9224eb150",
+        "order": 3,
+        "width": 3,
+        "height": 3,
+        "gtype": "gauge-34",
+        "gstyle": "needle",
+        "title": "Output Power",
+        "units": "watt",
+        "icon": "",
+        "prefix": "",
+        "suffix": "",
+        "segments": [
+            {
+                "from": "0",
+                "color": "#d65cd2"
+            },
+            {
+                "from": "1000",
+                "color": "#48cd2d"
+            },
+            {
+                "from": "2800",
+                "color": "#1edc67"
+            },
+            {
+                "from": "4000",
+                "color": "#ea5353"
+            }
+        ],
+        "min": 0,
+        "max": "5000",
+        "sizeThickness": 16,
+        "sizeGap": 4,
+        "sizeKeyThickness": 8,
+        "styleRounded": true,
+        "styleGlow": false,
+        "className": "",
+        "x": 1290,
+        "y": 520,
+        "wires": []
+    },
+    {
+        "id": "91186b8eb51b1047",
+        "type": "ui-gauge",
+        "z": "f63587bd397db4fd",
+        "name": "frequency",
+        "group": "defddbc9224eb150",
+        "order": 4,
+        "width": 3,
+        "height": 3,
+        "gtype": "gauge-34",
+        "gstyle": "needle",
+        "title": "Output Frequency",
+        "units": "Hz",
+        "icon": "",
+        "prefix": "",
+        "suffix": "",
+        "segments": [
+            {
+                "from": "0",
+                "color": "#d65cd2"
+            },
+            {
+                "from": "40",
+                "color": "#48cd2d"
+            },
+            {
+                "from": "50",
+                "color": "#1edc67"
+            },
+            {
+                "from": "60",
+                "color": "#ea5353"
+            }
+        ],
+        "min": 0,
+        "max": "60",
+        "sizeThickness": 16,
+        "sizeGap": 4,
+        "sizeKeyThickness": 8,
+        "styleRounded": true,
+        "styleGlow": false,
+        "className": "",
+        "x": 1300,
+        "y": 560,
+        "wires": []
+    },
+    {
+        "id": "577df906386ed8df",
+        "type": "ui-gauge",
+        "z": "f63587bd397db4fd",
+        "name": "pf",
+        "group": "defddbc9224eb150",
+        "order": 5,
+        "width": 3,
+        "height": 3,
+        "gtype": "gauge-34",
+        "gstyle": "needle",
+        "title": "Output PowerFactor",
+        "units": "",
+        "icon": "",
+        "prefix": "",
+        "suffix": "",
+        "segments": [
+            {
+                "from": "0",
+                "color": "#d65cd2"
+            },
+            {
+                "from": "0.8",
+                "color": "#48cd2d"
+            },
+            {
+                "from": "0.9",
+                "color": "#1edc67"
+            },
+            {
+                "from": "1",
+                "color": "#ea5353"
+            }
+        ],
+        "min": 0,
+        "max": "1",
+        "sizeThickness": 16,
+        "sizeGap": 4,
+        "sizeKeyThickness": 8,
+        "styleRounded": true,
+        "styleGlow": false,
+        "className": "",
+        "x": 1290,
+        "y": 600,
+        "wires": []
+    },
+    {
+        "id": "9ab013d7457d0829",
+        "type": "modbus-flex-getter",
+        "z": "f63587bd397db4fd",
+        "name": "",
+        "showStatusActivities": true,
+        "showErrors": true,
+        "showWarnings": true,
+        "logIOActivities": false,
+        "server": "684c0f89cf9c160f",
+        "useIOFile": false,
+        "ioFile": "",
+        "useIOForPayload": false,
+        "emptyMsgOnFail": true,
+        "keepMsgProperties": true,
+        "delayOnStart": false,
+        "startDelayTime": "",
+        "x": 110,
+        "y": 1160,
+        "wires": [
+            [
+                "53211e885def2e77",
+                "843edce64ff657ef"
+            ],
+            [
+                "189ce58c39021a24"
+            ]
+        ]
+    },
+    {
+        "id": "99810ef8bbae2895",
+        "type": "function",
+        "z": "f63587bd397db4fd",
+        "name": "read Inputs",
+        "func": "var id =1;\nvar fc = 2;\nvar sa = 0;\nvar addresses = 4;\nvar slave_ip = msg.payload.slave_ip;\nmsg.slave_ip = \"192.168.0.160\";\nmsg.payload = { value: msg.payload, 'fc': fc, 'unitid': id, 'address': sa, 'quantity': addresses };\nreturn msg;",
+        "outputs": 1,
+        "timeout": 0,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 110,
+        "y": 1100,
+        "wires": [
+            [
+                "9ab013d7457d0829"
+            ]
+        ]
+    },
+    {
+        "id": "80b7719cb64dbb32",
+        "type": "inject",
+        "z": "f63587bd397db4fd",
+        "name": "",
+        "props": [
+            {
+                "p": "payload"
+            },
+            {
+                "p": "topic",
+                "vt": "str"
+            }
+        ],
+        "repeat": "1",
+        "crontab": "",
+        "once": true,
+        "onceDelay": 0.1,
+        "topic": "",
+        "payload": "",
+        "payloadType": "date",
+        "x": 110,
+        "y": 1040,
+        "wires": [
+            [
+                "99810ef8bbae2895"
+            ]
+        ]
+    },
+    {
+        "id": "189ce58c39021a24",
+        "type": "modbus-response",
+        "z": "f63587bd397db4fd",
+        "name": "",
+        "registerShowMax": "38",
+        "x": 410,
+        "y": 1240,
+        "wires": []
+    },
+    {
+        "id": "53211e885def2e77",
+        "type": "function",
+        "z": "f63587bd397db4fd",
+        "name": "parse_di",
+        "func": "// Check if the payload contains the expected array of boolean values\nif (!Array.isArray(msg.payload) || msg.payload.length < 4) {\n    node.error(\"Invalid Modbus data format. Expected an array of booleans.\");\n    return null;\n}\n\n// Extract the first four boolean values\nlet outputs = [];\nfor (let i = 0; i < 4; i++) {\n    outputs.push({ payload: msg.payload[i] });\n}\n\n// Return each boolean as a separate output\nreturn [outputs[0], outputs[1], outputs[2], outputs[3]];\n",
+        "outputs": 4,
+        "timeout": 0,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 380,
+        "y": 1180,
+        "wires": [
+            [
+                "351e4b854e13256b",
+                "2a2e4e31ebf2ce53"
+            ],
+            [
+                "5117120efa5b1764",
+                "b9b46ac75acb9df4",
+                "b2b74b0e76d6d841"
+            ],
+            [],
+            []
+        ]
+    },
+    {
+        "id": "843edce64ff657ef",
+        "type": "debug",
+        "z": "f63587bd397db4fd",
+        "name": "debug 3",
+        "active": true,
+        "tosidebar": true,
+        "console": false,
+        "tostatus": false,
+        "complete": "false",
+        "statusVal": "",
+        "statusType": "auto",
+        "x": 380,
+        "y": 1120,
+        "wires": []
+    },
+    {
+        "id": "fbc1a67f8088a4d9",
+        "type": "link out",
+        "z": "f63587bd397db4fd",
+        "name": "UPS_OUT",
+        "mode": "link",
+        "links": [
+            "bb187d10a8f9dee5"
+        ],
+        "x": 805,
+        "y": 1180,
+        "wires": []
+    },
+    {
+        "id": "5117120efa5b1764",
+        "type": "function",
+        "z": "f63587bd397db4fd",
+        "name": "boolean to value",
+        "func": "msg.payload = msg.payload === true ? 1 : 0;\nreturn msg;\n",
+        "outputs": 1,
+        "timeout": 0,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 640,
+        "y": 1180,
+        "wires": [
+            [
+                "fbc1a67f8088a4d9"
+            ]
+        ]
+    },
+    {
+        "id": "b9b46ac75acb9df4",
+        "type": "ui-led",
+        "z": "f63587bd397db4fd",
+        "name": "",
+        "group": "21dd776335f3a8b5",
+        "order": 2,
+        "width": 2,
+        "height": 0,
+        "label": "UPS OUTPUT",
+        "labelPlacement": "left",
+        "labelAlignment": "flex-start",
+        "states": [
+            {
+                "value": "false",
+                "valueType": "bool",
+                "color": "#fbf4f4"
+            },
+            {
+                "value": "true",
+                "valueType": "bool",
+                "color": "#e1094a"
+            }
+        ],
+        "allowColorForValueInMessage": false,
+        "shape": "circle",
+        "showBorder": true,
+        "showGlow": true,
+        "x": 630,
+        "y": 1140,
+        "wires": []
+    },
+    {
+        "id": "351e4b854e13256b",
+        "type": "ui-led",
+        "z": "f63587bd397db4fd",
+        "name": "",
+        "group": "21dd776335f3a8b5",
+        "order": 1,
+        "width": 2,
+        "height": 0,
+        "label": "MAINS INPUT",
+        "labelPlacement": "left",
+        "labelAlignment": "flex-start",
+        "states": [
+            {
+                "value": "false",
+                "valueType": "bool",
+                "color": "#f5f0f0"
+            },
+            {
+                "value": "true",
+                "valueType": "bool",
+                "color": "#eb1435"
+            }
+        ],
+        "allowColorForValueInMessage": false,
+        "shape": "circle",
+        "showBorder": true,
+        "showGlow": true,
+        "x": 630,
+        "y": 1100,
+        "wires": []
+    },
+    {
+        "id": "2a2e4e31ebf2ce53",
+        "type": "ui-led",
+        "z": "f63587bd397db4fd",
+        "name": "MAINS INPUT",
+        "group": "694524e4e14fe2fb",
+        "order": 1,
+        "width": 0,
+        "height": 0,
+        "label": "MAINS INPUT",
+        "labelPlacement": "left",
+        "labelAlignment": "flex-start",
+        "states": [
+            {
+                "value": "false",
+                "valueType": "bool",
+                "color": "#f6f4f4"
+            },
+            {
+                "value": "true",
+                "valueType": "bool",
+                "color": "#e01a24"
+            }
+        ],
+        "allowColorForValueInMessage": false,
+        "shape": "circle",
+        "showBorder": true,
+        "showGlow": true,
+        "x": 760,
+        "y": 1040,
+        "wires": []
+    },
+    {
+        "id": "b2b74b0e76d6d841",
+        "type": "ui-led",
+        "z": "f63587bd397db4fd",
+        "name": "UPS_OUTPUT",
+        "group": "694524e4e14fe2fb",
+        "order": 2,
+        "width": 0,
+        "height": 0,
+        "label": "UPS OUTPUT",
+        "labelPlacement": "left",
+        "labelAlignment": "flex-start",
+        "states": [
+            {
+                "value": "false",
+                "valueType": "bool",
+                "color": "#f7eeee"
+            },
+            {
+                "value": "true",
+                "valueType": "bool",
+                "color": "#e2181b"
+            }
+        ],
+        "allowColorForValueInMessage": false,
+        "shape": "circle",
+        "showBorder": true,
+        "showGlow": true,
+        "x": 820,
+        "y": 1100,
+        "wires": []
+    },
+    {
+        "id": "1671e19a5e66f655",
+        "type": "ui-led",
+        "z": "f63587bd397db4fd",
+        "name": "LOAD BANK1",
+        "group": "694524e4e14fe2fb",
+        "order": 3,
+        "width": 0,
+        "height": 0,
+        "label": "LOAD BANK1",
+        "labelPlacement": "left",
+        "labelAlignment": "flex-start",
+        "states": [
+            {
+                "value": "false",
+                "valueType": "bool",
+                "color": "#f9f1f1"
+            },
+            {
+                "value": "true",
+                "valueType": "bool",
+                "color": "#00ff00"
+            }
+        ],
+        "allowColorForValueInMessage": false,
+        "shape": "circle",
+        "showBorder": true,
+        "showGlow": true,
+        "x": 540,
+        "y": 400,
+        "wires": []
+    },
+    {
+        "id": "b6030f1b24bcd31e",
+        "type": "ui-led",
+        "z": "f63587bd397db4fd",
+        "name": "LOAD BANK2",
+        "group": "694524e4e14fe2fb",
+        "order": 4,
+        "width": 0,
+        "height": 0,
+        "label": "LOAD BANK2",
+        "labelPlacement": "left",
+        "labelAlignment": "flex-start",
+        "states": [
+            {
+                "value": "false",
+                "valueType": "bool",
+                "color": "#f6f4f4"
+            },
+            {
+                "value": "true",
+                "valueType": "bool",
+                "color": "#00ff00"
+            }
+        ],
+        "allowColorForValueInMessage": false,
+        "shape": "circle",
+        "showBorder": true,
+        "showGlow": true,
+        "x": 540,
+        "y": 520,
+        "wires": []
+    },
+    {
+        "id": "a11320e615ab1dc7",
+        "type": "ui-led",
+        "z": "f63587bd397db4fd",
+        "name": "LOAD BANK3",
+        "group": "694524e4e14fe2fb",
+        "order": 5,
+        "width": 0,
+        "height": 0,
+        "label": "LOAD BANK2",
+        "labelPlacement": "left",
+        "labelAlignment": "flex-start",
+        "states": [
+            {
+                "value": "false",
+                "valueType": "bool",
+                "color": "#f8f7f7"
+            },
+            {
+                "value": "true",
+                "valueType": "bool",
+                "color": "#00ff00"
+            }
+        ],
+        "allowColorForValueInMessage": false,
+        "shape": "circle",
+        "showBorder": true,
+        "showGlow": true,
+        "x": 540,
+        "y": 660,
+        "wires": []
+    },
+    {
+        "id": "2a2bc9032f6f372f",
+        "type": "ui-led",
+        "z": "f63587bd397db4fd",
+        "name": "UPDATE",
+        "group": "694524e4e14fe2fb",
+        "order": 6,
+        "width": 0,
+        "height": 0,
+        "label": "UPDATE",
+        "labelPlacement": "left",
+        "labelAlignment": "flex-start",
+        "states": [
+            {
+                "value": "false",
+                "valueType": "bool",
+                "color": "#ff0000"
+            },
+            {
+                "value": "true",
+                "valueType": "bool",
+                "color": "#00ff00"
+            }
+        ],
+        "allowColorForValueInMessage": false,
+        "shape": "circle",
+        "showBorder": true,
+        "showGlow": true,
+        "x": 540,
+        "y": 780,
+        "wires": []
+    },
+    {
+        "id": "1b9a4f1511420284",
+        "type": "modbus-client",
+        "name": "PZEM_172",
+        "clienttype": "tcp",
+        "bufferCommands": true,
+        "stateLogEnabled": false,
+        "queueLogEnabled": false,
+        "failureLogEnabled": true,
+        "tcpHost": "192.168.0.172",
+        "tcpPort": "502",
+        "tcpType": "DEFAULT",
+        "serialPort": "/dev/ttyUSB",
+        "serialType": "RTU-BUFFERD",
+        "serialBaudrate": "9600",
+        "serialDatabits": "8",
+        "serialStopbits": "1",
+        "serialParity": "none",
+        "serialConnectionDelay": "100",
+        "serialAsciiResponseStartDelimiter": "0x3A",
+        "unit_id": "1",
+        "commandDelay": "1",
+        "clientTimeout": "2000",
+        "reconnectOnTimeout": true,
+        "reconnectTimeout": "2000",
+        "parallelUnitIdsAllowed": true,
+        "showErrors": false,
+        "showWarnings": true,
+        "showLogs": true
+    },
+    {
+        "id": "0282c4d64488b8ca",
+        "type": "ui-group",
+        "name": "CALIBRATION",
+        "page": "23cc35eeabdc6106",
+        "width": "6",
+        "height": "1",
+        "order": 1,
+        "showTitle": true,
+        "className": "",
+        "visible": "true",
+        "disabled": "false",
+        "groupType": "default"
+    },
+    {
+        "id": "25b4840ae2beec11",
+        "type": "ui-group",
+        "name": "COMMANDS",
+        "page": "8ac92c3234460b73",
+        "width": 4,
+        "height": "1",
+        "order": 2,
+        "showTitle": true,
+        "className": "",
+        "visible": "true",
+        "disabled": "false",
+        "groupType": "default"
+    },
+    {
+        "id": "965c3c29c8a0702d",
+        "type": "ui-group",
+        "name": "INPUT_POWER",
+        "page": "8ac92c3234460b73",
+        "width": "6",
+        "height": "1",
+        "order": 3,
+        "showTitle": true,
+        "className": "",
+        "visible": "true",
+        "disabled": "false",
+        "groupType": "default"
+    },
+    {
+        "id": "defddbc9224eb150",
+        "type": "ui-group",
+        "name": "OUTPUT_POWER",
+        "page": "8ac92c3234460b73",
+        "width": "6",
+        "height": "1",
+        "order": 4,
+        "showTitle": true,
+        "className": "",
+        "visible": "true",
+        "disabled": "false",
+        "groupType": "default"
+    },
+    {
+        "id": "684c0f89cf9c160f",
+        "type": "modbus-client",
+        "name": "INPUT_SERVER_160",
+        "clienttype": "tcp",
+        "bufferCommands": true,
+        "stateLogEnabled": false,
+        "queueLogEnabled": false,
+        "failureLogEnabled": true,
+        "tcpHost": "192.168.0.160",
+        "tcpPort": "502",
+        "tcpType": "DEFAULT",
+        "serialPort": "/dev/ttyUSB",
+        "serialType": "RTU-BUFFERD",
+        "serialBaudrate": "9600",
+        "serialDatabits": "8",
+        "serialStopbits": "1",
+        "serialParity": "none",
+        "serialConnectionDelay": "100",
+        "serialAsciiResponseStartDelimiter": "0x3A",
+        "unit_id": "1",
+        "commandDelay": "1",
+        "clientTimeout": "2000",
+        "reconnectOnTimeout": true,
+        "reconnectTimeout": "2000",
+        "parallelUnitIdsAllowed": true,
+        "showErrors": false,
+        "showWarnings": true,
+        "showLogs": true
+    },
+    {
+        "id": "21dd776335f3a8b5",
+        "type": "ui-group",
+        "name": "UPS_STATUS",
+        "page": "471db678a8b02296",
+        "width": 3,
+        "height": "1",
+        "order": 1,
+        "showTitle": true,
+        "className": "",
+        "visible": "true",
+        "disabled": "false",
+        "groupType": "default"
+    },
+    {
+        "id": "694524e4e14fe2fb",
+        "type": "ui-group",
+        "name": "STATUS",
+        "page": "8ac92c3234460b73",
+        "width": "6",
+        "height": "1",
+        "order": 1,
+        "showTitle": true,
+        "className": "",
+        "visible": "true",
+        "disabled": "false",
+        "groupType": "default"
+    },
+    {
+        "id": "23cc35eeabdc6106",
+        "type": "ui-page",
+        "name": "CALIBRATION",
+        "ui": "6bb6879aa70631ea",
+        "path": "/calibration",
+        "icon": "knob",
+        "layout": "grid",
+        "theme": "f51f9a07212ff54b",
+        "breakpoints": [
+            {
+                "name": "Default",
+                "px": "0",
+                "cols": "3"
+            },
+            {
+                "name": "Tablet",
+                "px": "576",
+                "cols": "6"
+            },
+            {
+                "name": "Small Desktop",
+                "px": "768",
+                "cols": "9"
+            },
+            {
+                "name": "Desktop",
+                "px": "1024",
+                "cols": "12"
+            }
+        ],
+        "order": 3,
+        "className": "",
+        "visible": "true",
+        "disabled": "false"
+    },
+    {
+        "id": "8ac92c3234460b73",
+        "type": "ui-page",
+        "name": "LIVE VIEW",
+        "ui": "6bb6879aa70631ea",
+        "path": "/home",
+        "icon": "home",
+        "layout": "grid",
+        "theme": "f51f9a07212ff54b",
+        "breakpoints": [
+            {
+                "name": "Default",
+                "px": "0",
+                "cols": "3"
+            },
+            {
+                "name": "Tablet",
+                "px": "576",
+                "cols": "6"
+            },
+            {
+                "name": "Small Desktop",
+                "px": "768",
+                "cols": "9"
+            },
+            {
+                "name": "Desktop",
+                "px": "1024",
+                "cols": "12"
+            }
+        ],
+        "order": 1,
+        "className": "",
+        "visible": "true",
+        "disabled": "false"
+    },
+    {
+        "id": "471db678a8b02296",
+        "type": "ui-page",
+        "name": "BACKUP_TEST",
+        "ui": "6bb6879aa70631ea",
+        "path": "/backup_test",
+        "icon": "battery-clock",
+        "layout": "grid",
+        "theme": "f51f9a07212ff54b",
+        "breakpoints": [
+            {
+                "name": "Default",
+                "px": "0",
+                "cols": "3"
+            },
+            {
+                "name": "Tablet",
+                "px": "576",
+                "cols": "6"
+            },
+            {
+                "name": "Small Desktop",
+                "px": "768",
+                "cols": "9"
+            },
+            {
+                "name": "Desktop",
+                "px": "1024",
+                "cols": "12"
+            }
+        ],
+        "order": 2,
+        "className": "",
+        "visible": "true",
+        "disabled": "false"
+    },
+    {
+        "id": "6bb6879aa70631ea",
+        "type": "ui-base",
+        "name": "UPS Tester",
+        "path": "/dashboard",
+        "appIcon": "",
+        "includeClientData": true,
+        "acceptsClientConfig": [
+            "ui-notification",
+            "ui-control"
+        ],
+        "showPathInSidebar": false,
+        "showPageTitle": true,
+        "navigationStyle": "default",
+        "titleBarStyle": "default",
+        "showReconnectNotification": true,
+        "notificationDisplayTime": "1",
+        "showDisconnectNotification": true
+    },
+    {
+        "id": "f51f9a07212ff54b",
+        "type": "ui-theme",
+        "name": "Default Theme",
+        "colors": {
+            "surface": "#d1479f",
+            "primary": "#0094ce",
+            "bgPage": "#ededed",
+            "groupBg": "#ffffff",
+            "groupOutline": "#cccccc"
+        },
+        "sizes": {
+            "density": "default",
+            "pagePadding": "12px",
+            "groupGap": "12px",
+            "groupBorderRadius": "4px",
+            "widgetGap": "12px"
+        }
+    }
+]
