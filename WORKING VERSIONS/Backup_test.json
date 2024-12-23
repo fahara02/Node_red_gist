@@ -1,0 +1,330 @@
+[
+    {
+        "id": "8e2e0a4fdff06bc0",
+        "type": "tab",
+        "label": "BACKUP_TEST",
+        "disabled": false,
+        "info": "",
+        "env": []
+    },
+    {
+        "id": "bb187d10a8f9dee5",
+        "type": "link in",
+        "z": "8e2e0a4fdff06bc0",
+        "name": "link in 4",
+        "links": [
+            "fbc1a67f8088a4d9"
+        ],
+        "x": 115,
+        "y": 80,
+        "wires": [
+            [
+                "a3d246bd7b26d367"
+            ]
+        ]
+    },
+    {
+        "id": "9e2a42b91b5d5134",
+        "type": "inject",
+        "z": "8e2e0a4fdff06bc0",
+        "name": "Load ON",
+        "props": [
+            {
+                "p": "payload"
+            }
+        ],
+        "repeat": "",
+        "crontab": "",
+        "once": false,
+        "onceDelay": "",
+        "topic": "",
+        "payload": "1",
+        "payloadType": "num",
+        "x": 200,
+        "y": 180,
+        "wires": [
+            [
+                "b22e342d733d6177"
+            ]
+        ]
+    },
+    {
+        "id": "24aceff7a4216e35",
+        "type": "inject",
+        "z": "8e2e0a4fdff06bc0",
+        "name": "Load OFF",
+        "props": [
+            {
+                "p": "payload"
+            }
+        ],
+        "repeat": "",
+        "crontab": "",
+        "once": false,
+        "onceDelay": "",
+        "topic": "",
+        "payload": "0",
+        "payloadType": "num",
+        "x": 200,
+        "y": 230,
+        "wires": [
+            [
+                "b22e342d733d6177"
+            ]
+        ]
+    },
+    {
+        "id": "b22e342d733d6177",
+        "type": "switch",
+        "z": "8e2e0a4fdff06bc0",
+        "name": "ON/OFF Switch",
+        "property": "payload",
+        "propertyType": "msg",
+        "rules": [
+            {
+                "t": "eq",
+                "v": "1",
+                "vt": "num"
+            },
+            {
+                "t": "eq",
+                "v": "0",
+                "vt": "num"
+            }
+        ],
+        "checkall": "true",
+        "repair": false,
+        "outputs": 2,
+        "x": 400,
+        "y": 205,
+        "wires": [
+            [
+                "369a611893c4d67a"
+            ],
+            [
+                "44f32a4d2114d5df"
+            ]
+        ]
+    },
+    {
+        "id": "369a611893c4d67a",
+        "type": "function",
+        "z": "8e2e0a4fdff06bc0",
+        "name": "Start Timer",
+        "func": "const isRunning=true;\nflow.set('isRunning', isRunning);\n\nflow.set('startTime', new Date());\nif(isRunning){\nnode.status({ fill: 'green', shape: 'dot', text: 'Timer started...' });\n}\n\nreturn null;",
+        "outputs": 1,
+        "timeout": "",
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 600,
+        "y": 180,
+        "wires": [
+            []
+        ]
+    },
+    {
+        "id": "44f32a4d2114d5df",
+        "type": "function",
+        "z": "8e2e0a4fdff06bc0",
+        "name": "Stop Timer",
+        "func": "flow.set('isRunning', false);\nflow.set('startTime', null);\n\nreturn null;",
+        "outputs": 1,
+        "timeout": "",
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 600,
+        "y": 230,
+        "wires": [
+            []
+        ]
+    },
+    {
+        "id": "a09e8352f3565372",
+        "type": "inject",
+        "z": "8e2e0a4fdff06bc0",
+        "name": "1 Second Interval",
+        "props": [],
+        "repeat": "1",
+        "crontab": "",
+        "once": true,
+        "onceDelay": 0.1,
+        "topic": "",
+        "x": 200,
+        "y": 280,
+        "wires": [
+            [
+                "0bfab6eed321385d"
+            ]
+        ]
+    },
+    {
+        "id": "0bfab6eed321385d",
+        "type": "function",
+        "z": "8e2e0a4fdff06bc0",
+        "name": "Update Timer",
+        "func": "// Read context values\nconst isRunning = flow.get('isRunning') === true;\nconst startTime = flow.get('startTime'); // Expect an ISO string or timestamp\n\nif (isRunning && startTime) {\n    // Parse startTime into a Date object\n    const start = new Date(startTime);\n    if (isNaN(start.getTime())) {\n        // Handle invalid startTime\n        node.status({ fill: 'red', shape: 'ring', text: 'Invalid start time' });\n        return null;\n    }\n\n    // Calculate elapsed time\n    const now = new Date();\n    const elapsedMs = now.getTime() - start.getTime();\n\n    // Convert elapsed time to hours, minutes, and seconds\n    const totalSeconds = Math.floor(elapsedMs / 1000);\n    const hours = Math.floor(totalSeconds / 3600);\n    const minutes = Math.floor((totalSeconds % 3600) / 60);\n    const seconds = totalSeconds % 60;\n\n    // Format as HH:MM:SS\n    const formattedTime = [\n        hours.toString().padStart(2, '0'),\n        minutes.toString().padStart(2, '0'),\n        seconds.toString().padStart(2, '0'),\n    ].join(':');\n\n    // Update payload and node status\n    msg.payload = formattedTime;\n    node.status({ fill: 'green', shape: 'dot', text: formattedTime });\n    return msg;\n} else if (!isRunning) {\n    // Timer is stopped\n    node.status({ fill: 'red', shape: 'ring', text: 'Timer Stopped' });\n    return null;\n} else {\n    // Handle edge case: startTime is missing\n    node.status({ fill: 'red', shape: 'ring', text: 'Missing start time' });\n    return null;\n}\n",
+        "outputs": 1,
+        "timeout": "",
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 400,
+        "y": 280,
+        "wires": [
+            [
+                "c72602962feed39c",
+                "e7df9d97ecc9262b"
+            ]
+        ]
+    },
+    {
+        "id": "c72602962feed39c",
+        "type": "debug",
+        "z": "8e2e0a4fdff06bc0",
+        "name": "Elapsed Time",
+        "active": true,
+        "tosidebar": true,
+        "console": false,
+        "tostatus": false,
+        "complete": "payload",
+        "targetType": "msg",
+        "x": 600,
+        "y": 280,
+        "wires": []
+    },
+    {
+        "id": "e7df9d97ecc9262b",
+        "type": "ui-text",
+        "z": "8e2e0a4fdff06bc0",
+        "group": "21dd776335f3a8b5",
+        "order": 3,
+        "width": 2,
+        "height": 0,
+        "name": "",
+        "label": "BACKUP TIME",
+        "format": "{{msg.payload}}",
+        "layout": "row-spread",
+        "style": true,
+        "font": "Georgia,Georgia,serif",
+        "fontSize": 16,
+        "color": "#121212",
+        "wrapText": false,
+        "className": "",
+        "x": 640,
+        "y": 340,
+        "wires": []
+    },
+    {
+        "id": "a3d246bd7b26d367",
+        "type": "function",
+        "z": "8e2e0a4fdff06bc0",
+        "name": "BUFFER",
+        "func": "let previousValue = flow.get('previousValue') || 0;\n\nif (msg.payload === 1 && previousValue !== 1) {\n    // First 1 received; send it\n    flow.set('previousValue', 1);\n    return msg; // Forward the message\n} else if (msg.payload === 0 && previousValue !== 0) {\n    // First 0 received; send it\n    flow.set('previousValue', 0);\n    return msg; // Forward the message\n} else {\n    // Repeated 1s or 0s, do nothing\n    return null;\n}\n",
+        "outputs": 1,
+        "timeout": 0,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 220,
+        "y": 120,
+        "wires": [
+            [
+                "b22e342d733d6177"
+            ]
+        ]
+    },
+    {
+        "id": "21dd776335f3a8b5",
+        "type": "ui-group",
+        "name": "UPS_STATUS",
+        "page": "471db678a8b02296",
+        "width": 3,
+        "height": "1",
+        "order": 1,
+        "showTitle": true,
+        "className": "",
+        "visible": "true",
+        "disabled": "false",
+        "groupType": "default"
+    },
+    {
+        "id": "471db678a8b02296",
+        "type": "ui-page",
+        "name": "BACKUP_TEST",
+        "ui": "6bb6879aa70631ea",
+        "path": "/backup_test",
+        "icon": "battery-clock",
+        "layout": "grid",
+        "theme": "f51f9a07212ff54b",
+        "breakpoints": [
+            {
+                "name": "Default",
+                "px": "0",
+                "cols": "3"
+            },
+            {
+                "name": "Tablet",
+                "px": "576",
+                "cols": "6"
+            },
+            {
+                "name": "Small Desktop",
+                "px": "768",
+                "cols": "9"
+            },
+            {
+                "name": "Desktop",
+                "px": "1024",
+                "cols": "12"
+            }
+        ],
+        "order": 2,
+        "className": "",
+        "visible": "true",
+        "disabled": "false"
+    },
+    {
+        "id": "6bb6879aa70631ea",
+        "type": "ui-base",
+        "name": "UPS Tester",
+        "path": "/dashboard",
+        "appIcon": "",
+        "includeClientData": true,
+        "acceptsClientConfig": [
+            "ui-notification",
+            "ui-control"
+        ],
+        "showPathInSidebar": false,
+        "showPageTitle": true,
+        "navigationStyle": "default",
+        "titleBarStyle": "default",
+        "showReconnectNotification": true,
+        "notificationDisplayTime": "1",
+        "showDisconnectNotification": true
+    },
+    {
+        "id": "f51f9a07212ff54b",
+        "type": "ui-theme",
+        "name": "Default Theme",
+        "colors": {
+            "surface": "#d1479f",
+            "primary": "#0094ce",
+            "bgPage": "#ededed",
+            "groupBg": "#ffffff",
+            "groupOutline": "#cccccc"
+        },
+        "sizes": {
+            "density": "default",
+            "pagePadding": "12px",
+            "groupGap": "12px",
+            "groupBorderRadius": "4px",
+            "widgetGap": "12px"
+        }
+    }
+]
